@@ -29,6 +29,12 @@ class CursedMenu(object):
         this_data: "DataManager",
     ):
         '''Initialization'''
+        self.debug = True # TODO: tmp debug
+        if self.debug:
+            self.debug_index = 0
+            art_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
+            self.debug_filenames = list(sorted(os.listdir(art_dir)))
+            self.debug_filename = self.debug_filenames[self.debug_index]
         self.initialized = False
         self.screen = stdscr
         try:
@@ -43,6 +49,8 @@ class CursedMenu(object):
         self.visited_plant = None
         self.user_data = this_data
         self.plant_string = self.plant.parse_plant()
+        if self.debug:
+            self.plant_string = 'DEBUG: ' + self.debug_filename
         self.plant_ticks = str(int(self.plant.ticks))
         self.exit = False
         self.infotoggle = 0
@@ -107,6 +115,8 @@ class CursedMenu(object):
 
     def show(self, options, title, subtitle):
         # Draws a menu with parameters
+        if self.debug:
+            options.append("DEBUG")
         self.set_options(options)
         self.update_options()
         self.title = title
@@ -168,7 +178,7 @@ class CursedMenu(object):
         # Falls back on ASCII if no ANSI version exists
         # Assumes curses.has_colors()
         this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
-        this_filename = os.path.join(this_dir,filename + '.ansi')
+        this_filename = os.path.join(this_dir, filename + '.ansi')
         if not os.path.exists(this_filename):
             self.ascii_render(filename, ypos, xpos)
             return
@@ -193,6 +203,12 @@ class CursedMenu(object):
         self.screen_lock.release()
 
     def art_render(self, filename, ypos, xpos):
+        if self.debug:
+            if self.debug_filename.endswith('.ansi'):
+                self.ansi_render(self.debug_filename.split('.')[0], ypos, xpos)
+            elif self.debug_filename.endswith('.txt'):
+                self.ascii_render(self.debug_filename.split('.')[0], ypos, xpos)
+            return
         if curses.has_colors():
             self.ansi_render(filename, ypos, xpos)
         else:
@@ -294,7 +310,7 @@ class CursedMenu(object):
     def update_plant_live(self):
         # updates plant data on menu screen, live!
         while not self.exit:
-            self.plant_string = self.plant.parse_plant()
+            self.plant_string = self.plant.parse_plant() if not self.debug else self.plant_string
             self.plant_ticks = str(int(self.plant.ticks))
             if self.initialized:
                 self.update_options()
@@ -864,6 +880,12 @@ class CursedMenu(object):
                 self.visit_handler()
             case "garden":
                 self.draw_garden()
+            case "DEBUG":
+                self.debug_index = (self.debug_index + 1) % len(self.debug_filenames)
+                self.debug_filename = self.debug_filenames[self.debug_index]
+                self.plant_string = 'DEBUG: ' + self.debug_filename
+                self.screen.clear()
+                self.draw_default()
 
 
 def menu(stdscrn: curses.window, *, this_plant, this_data):
