@@ -178,6 +178,7 @@ class CursedMenu(object):
         # Prints ANSI art from file at given coordinates
         # Falls back on ASCII if no ANSI version exists
         # Assumes curses.has_colors()
+        # TODO: represent plant color (see color_list in plant.py)
         this_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),"art")
         this_filename = os.path.join(this_dir, filename + '.ansi')
         if not os.path.exists(this_filename):
@@ -204,14 +205,33 @@ class CursedMenu(object):
                     self.screen.addstr(ypos+y, xpos+x, text, color)
                     x += len(text)
 
+    def use_color(self):
+        # Check if colors are even supported
+        if not curses.has_colors():
+            return False
+        # Respect environment variables
+        # PYTHON_COLORS takes precedence over NO_COLOR
+        # NO_COLOR takes precedence over FORCE_COLOR
+        if os.getenv('PYTHON_COLORS') == '0':
+            return False
+        if os.getenv('PYTHON_COLORS') == '1':
+            return True
+        if os.getenv('NO_COLOR'):
+            return False
+        if os.getenv('FORCE_COLOR'):
+            return True
+        return True
+
     def art_render(self, filename, ypos, xpos):
         if self.debug_art:
-            if self.debug_filename.endswith('.ansi'):
+            if self.debug_filename.endswith('.ansi') and self.use_color():
                 self.ansi_render(self.debug_filename.split('.')[0], ypos, xpos)
             elif self.debug_filename.endswith('.txt'):
                 self.ascii_render(self.debug_filename.split('.')[0], ypos, xpos)
+            else:
+                self.ascii_render(self.debug_filename.split('.')[0], ypos, xpos)
             return
-        if curses.has_colors():
+        if self.use_color():
             self.ansi_render(filename, ypos, xpos)
         else:
             self.ascii_render(filename, ypos, xpos)
