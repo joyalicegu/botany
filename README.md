@@ -35,6 +35,7 @@ A once-weekly cron on clear_weekly_users.py should be set up to keep weekly visi
   with 20% growth speed for the next plant
 * Random and rare mutations can occur at any point in a plant's life
 * SQLite Community Garden of other users' plants (for shared unix servers)
+* Colored plant art! Color can be toggled off by setting the environment variable `NO_COLOR` or setting `PYTHON_COLORS=0`.
 * Data files are created in the user's home (~) directory, along with a JSON file that can be used in other apps.
   * Data is created for your current plant and harvested plants
 
