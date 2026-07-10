@@ -236,9 +236,19 @@ class CursedMenu(object):
         else:
             self.ascii_render(filename, ypos, xpos)
 
+    def clear_plant_ascii(self, ypos, xpos):
+        # Clears plant ascii art
+        with self.screen_lock:
+            clear_bar = " " * (self.maxx - xpos)
+            max_plant_height = 12
+            for y in range(0, max_plant_height):
+                self.screen.addstr(ypos+y, xpos, clear_bar, curses.A_NORMAL)
+                self.screen.refresh()
+
     def draw_plant_ascii(self, this_plant):
         ypos = 0
         xpos = int((self.maxx-37)/2 + 25)
+        self.clear_plant_ascii(ypos, xpos)
         plant_art_list = [
             'poppy',
             'cactus',
