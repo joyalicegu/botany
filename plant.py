@@ -332,10 +332,13 @@ class Plant:
     def life(self, dm):
         # I've created life :)
         counter = 0
-        generation_bonus = round(0.2 * (self.generation - 1), 1)
-        score_inc = 1 * (1 + generation_bonus)
+        prev_dead = False
         while True:
             counter += 1
+            # recompute each tick so a plant harvested mid-session picks up its
+            # new generation bonus immediately (start_over increments generation)
+            generation_bonus = round(0.2 * (self.generation - 1), 1)
+            score_inc = 1 * (1 + generation_bonus)
             if not self.dead:
                 if self.watered_24h:
                     self.ticks += score_inc
@@ -350,8 +353,13 @@ class Plant:
                 pass
 
             if self.dead_check():
-                dm.harvest_plant(self)
+                # record to the harvest file once per death, not every tick
+                if not prev_dead:
+                    dm.harvest_plant(self)
                 self.unlock_new_creation()
+                prev_dead = True
+            else:
+                prev_dead = False
 
             if counter % 3 == 0:
                 dm.save_plant(self)

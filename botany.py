@@ -96,17 +96,20 @@ class DataManager(object):
         this_plant.migrate_properties()
 
         # get status since last login
-        is_watered = this_plant.water_check()
+        # water_check() also refreshes watered_timestamp from guest waterings
+        this_plant.water_check()
         is_dead = this_plant.dead_check()
 
         if not is_dead:
-            if is_watered:
-                time_delta_last = int(time.time()) - this_plant.last_time
-                ticks_to_add = min(time_delta_last, 24*3600)
-                this_plant.time_delta_watered = 0
-                self.last_water_gain = time.time()
-            else:
-                ticks_to_add = 0
+            # credit the offline gap, but only the portion that overlapped the
+            # plant's 24h watered window [watered_timestamp, watered_timestamp+24h].
+            # this recovers points earned while the app was closed even if the
+            # water ran out before reopening.
+            now = int(time.time())
+            watered_until = this_plant.watered_timestamp + (24 * 3600)
+            start = max(this_plant.last_time, this_plant.watered_timestamp)
+            end = min(now, watered_until)
+            ticks_to_add = max(0, end - start)
             this_plant.ticks += ticks_to_add * round(0.2 * (this_plant.generation - 1) + 1, 1)
         return this_plant
 
